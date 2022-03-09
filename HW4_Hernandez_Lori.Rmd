@@ -119,7 +119,7 @@ state_table <- all_years %>%
   select(`Tornado ID`, Year, `Begin Date and Time`, `Direct Injuries`, `Indirect Injuries`, `Direct Deaths`, `Indirect Deaths`, `Property Damage`, `Crop Damage`, `Enhanced Fujita Scale`, `Episode Narrative`, Source)
 state_table <- datatable(state_table, options = list(
     autoWidth = TRUE,
-    columnDefs = list(list(width="500px", targets=11), list(width="250px", targets=3), list(width="150px", targets=10),
+    columnDefs = list(list(width="350px", targets=11), list(width="200px", targets=3), list(width="100px", targets=10),
                       list(className = 'dt-center', targets=1:9)),
     scrollX = 200, scrollY=400
   ))
@@ -134,7 +134,7 @@ year_table <- all_years %>%
   select(`Tornado ID`, State, `Begin Date and Time`, `Direct Injuries`, `Indirect Injuries`, `Direct Deaths`, `Indirect Deaths`, `Property Damage`, `Crop Damage`, `Enhanced Fujita Scale`, `Episode Narrative`, Source)
 year_table <- datatable(year_table, options = list(
     autoWidth = TRUE,
-    columnDefs = list(list(width="500px", targets=11), list(width="250px", targets=3), list(width="150px", targets=10),
+    columnDefs = list(list(width="350px", targets=11), list(width="200px", targets=3), list(width="100px", targets=10),
                       list(className = 'dt-center', targets=1:9)),
     scrollX = 200, scrollY=400
   ))
