@@ -1,0 +1,147 @@
+---
+title: "STAA 566 HW4"
+author: "Lori Hernandez"
+output: html_document
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+---
+## **Discussion:**
+
+I am continuing to utilize tornado data, obtained from the Storm Events Database that is created and maintained by the National Oceanic and Atmospheric Administration (NOAA), to create my projects.  The Storm Events Database can be accessed here: [Storm Events Database](https://www.ncdc.noaa.gov/stormevents/ftp.jsp).  On the left side of the page, one can access the [NWS Documentation PDF](https://www.nws.noaa.gov/directives/sym/pd01016005curr.pdf), which provides detailed information on how this data is compiled and in-depth guidance on the terminology used.  The actual CSV files I downloaded are [here](https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/) - note that I chose to limit my analysis to the past decade, so I utilized the "details" files for years 2012 - 2021.  To replicate this work, one would first need to download those 10 files and save them as variables year_xxxx, where xxxx is the 4 digit calendar year of the csv being loaded into R.  Another helpful PDF is available on this page, titled [Storm-Data-Bulk-csv-Format](https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/Storm-Data-Bulk-csv-Format.pdf) - this PDf provides quick explanations for the variables in the csv files.
+
+The Storm Events Database houses information on storm activity throughout the United States, going all the way back to 1950.  There is a lot of information available within these files, but I chose to narrow my focus to only analyze tornado activity, in order to avoid having too complicated or messy figures (and because I have always been fascinated by tornadoes). My goal for these tables it to show information on tornadoes that would not be easily captured in any of the other visualizations I am including in my final Shiny dashboard - particularly the Event Narrative, which is a string of text that provides narrative information about each tornado.  I will create two tables that will be filtered by the user, one filtered by year and one filtered by state, so that the user can drill down to the information most interesting to them, once these tables are on the Shiny dashboard.  I will also include the tornado ID#, which will make it easier for the user to use these tables to get more information on tornadoes that they see in the other visuals, since the tornado ID# is included in all visualizations.
+
+
+## **Code and Graphic**
+First, I will set up my script by loading the necessary packages.  I also include an option to make R not convert my numeric values to scientific notation.
+```{r, warning=FALSE}
+library(DT)
+library(dplyr)
+library(readr)
+library(scales)
+library(tidyr)
+library(stringr)
+
+#force R not to convert numeric values to scientific notation
+options(scipen = 999)
+```
+
+Next I will load the csv files, one for each of the ten years. I select only the columns that I will need to prepare my table, and filter to only include rows about tornadoes, as I am not interested in the other weather events for this visualization.  I then combine all 10 years into one data frame.
+```{r}
+year_2012 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2012_c20220107.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2013 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2013_c20220124.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2014 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2014_c20211217.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2015 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2015_c20211217.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2016 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2016_c20211217.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2017 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2017_c20220124.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2018 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2018_c20220124.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2019 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2019_c20220124.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2020 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2020_c20220124.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+year_2021 <- read.csv("C:/Users/lhern/OneDrive/Desktop/STAA 566/StormData/StormEvents_details-ftp_v1.0_d2021_c20220124.csv.gz") %>%
+  select(YEAR, EVENT_TYPE, EVENT_ID, STATE, CZ_NAME, BEGIN_DATE_TIME, CZ_TIMEZONE, INJURIES_DIRECT, INJURIES_INDIRECT, DEATHS_DIRECT, DEATHS_INDIRECT, DAMAGE_PROPERTY, DAMAGE_CROPS, TOR_F_SCALE, EPISODE_NARRATIVE, SOURCE) %>%
+  filter(EVENT_TYPE == "Tornado")
+
+all_years <- rbind(year_2012, year_2013, year_2014, year_2015, year_2016, year_2017, year_2018, year_2019, year_2020, year_2021)
+```
+
+The csv files obtained from the NOAA have the property damage and crop damage variables as character fields, with amounts shown with K for thousands, M for millions, and B for billions.  Here I convert these two fields to numeric by identifying the presence of a K, M, or B, and multiplying the numeric portion of the string accordingly to get the right value.  Then, I replace any NA values within the full data frame with a 0.
+```{r}
+all_years$DAMAGE_PROPERTY <- dplyr::case_when(
+  stringr::str_detect(all_years$DAMAGE_PROPERTY, 'K') ~ readr::parse_number(all_years$DAMAGE_PROPERTY) * 1000,
+  stringr::str_detect(all_years$DAMAGE_PROPERTY, 'M') ~ readr::parse_number(all_years$DAMAGE_PROPERTY) * 1000000,
+  stringr::str_detect(all_years$DAMAGE_PROPERTY, 'B') ~ readr::parse_number(all_years$DAMAGE_PROPERTY) * 1000000000,
+  TRUE ~ parse_number(all_years$DAMAGE_PROPERTY)
+)
+
+all_years$DAMAGE_CROPS <- dplyr::case_when(
+  stringr::str_detect(all_years$DAMAGE_CROPS, 'K') ~ readr::parse_number(all_years$DAMAGE_CROPS) * 1000,
+  stringr::str_detect(all_years$DAMAGE_CROPS, 'M') ~ readr::parse_number(all_years$DAMAGE_CROPS) * 1000000,
+  stringr::str_detect(all_years$DAMAGE_CROPS, 'B') ~ readr::parse_number(all_years$DAMAGE_CROPS) * 1000000000,
+  TRUE ~ parse_number(all_years$DAMAGE_CROPS)
+)
+
+all_years[is.na(all_years)] = 0
+```
+
+To make the final product more understandable for the user, I convert the property damage and crop damage values to be formatted as currency; this way, when the property and crop damage appear in the table, they will show up as dollar amounts.
+```{r}
+all_years$DAMAGE_CROPS <- dollar(all_years$DAMAGE_CROPS)
+all_years$DAMAGE_PROPERTY <- dollar(all_years$DAMAGE_PROPERTY)
+
+#I also combine the beginning date and time column with the timezone columns, to have more complete time information
+all_years$Beginning_Date_and_Time <- paste(all_years$BEGIN_DATE_TIME, all_years$CZ_TIMEZONE, sep=" ")
+```
+
+As most users won't know what the F-scale values mean, I modify the values in the data frame to include the MPH range for each F-scale.
+```{r}
+all_years$TOR_F_SCALE = dplyr::case_when(
+  all_years$TOR_F_SCALE == "EF0" ~ "EF0 (40-72 MPH)",
+  all_years$TOR_F_SCALE == "EF1" ~ "EF1 (73-112 MPH)",
+  all_years$TOR_F_SCALE == "EF2" ~ "EF2 (113-157 MPH)",
+  all_years$TOR_F_SCALE == "EF3" ~ "EF3 (158-206 MPH)",
+  all_years$TOR_F_SCALE == "EF4" ~ "EF4 (207-260 MPH)",
+  all_years$TOR_F_SCALE == "EF5" ~ "EF5 (261-318 MPH)",
+  TRUE ~ "Unknown")
+```
+
+Now I change the names of my columns, so they will look better in my final table.
+```{r}
+colnames(all_years) <- c("Year", "Event Type", "Tornado ID", "State", "CZ Name", "Begin_date_time", "CZ Timezone", "Direct Injuries", "Indirect Injuries", "Direct Deaths", "Indirect Deaths", "Property Damage", "Crop Damage", "Enhanced Fujita Scale", "Episode Narrative", "Source", "Begin Date and Time")
+```
+
+Finally, I create my table.  I specify the column widths for the Begin Date and Time, Episode Narrative, and Enhanced Fujita Scale columns to make the table look a little nicer and easier to read.  I also set scrolling to be active, both vertically and horizontally - this is what allows the custom column widths to function correctly and also gives the user more control over what they are looking at.  I also center the text in the first 9 columns, because it looks a little better that way.  Note that for right now, I set the filtering for the "state" and "year" parameters manually - but when I incorporate these tables into my Shiny dashboard, these filters will be set by the user input.
+
+```{r}
+state <- "ALABAMA"
+state_table <- all_years %>%
+  filter(State == state) %>%
+  select(`Tornado ID`, Year, `Begin Date and Time`, `Direct Injuries`, `Indirect Injuries`, `Direct Deaths`, `Indirect Deaths`, `Property Damage`, `Crop Damage`, `Enhanced Fujita Scale`, `Episode Narrative`, Source)
+state_table <- datatable(state_table, options = list(
+    autoWidth = TRUE,
+    columnDefs = list(list(width="500px", targets=11), list(width="250px", targets=3), list(width="150px", targets=10),
+                      list(className = 'dt-center', targets=1:9)),
+    scrollX = 200, scrollY=400
+  ))
+
+state_table
+```
+
+```{r}
+year <- "2021"
+year_table <- all_years %>%
+  filter(Year == year) %>%
+  select(`Tornado ID`, State, `Begin Date and Time`, `Direct Injuries`, `Indirect Injuries`, `Direct Deaths`, `Indirect Deaths`, `Property Damage`, `Crop Damage`, `Enhanced Fujita Scale`, `Episode Narrative`, Source)
+year_table <- datatable(year_table, options = list(
+    autoWidth = TRUE,
+    columnDefs = list(list(width="500px", targets=11), list(width="250px", targets=3), list(width="150px", targets=10),
+                      list(className = 'dt-center', targets=1:9)),
+    scrollX = 200, scrollY=400
+  ))
+
+year_table
+```
+
+
+
+
